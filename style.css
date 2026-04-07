@@ -1,80 +1,107 @@
 :root {
-    --bg-page: #0f172a; /* Цвет фона вокруг чата на ПК */
-    --bg-chat: #1e293b; /* Цвет самого чата */
-    --header-bg: #0f172a;
-    --msg-bg: #334155;
-    --accent: #3b82f6;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --bg-dark: #0e1621;
+    --bg-sec: #17212b;
+    --accent: #2481cc;
+    --text: #f5f5f5;
+    --danger: #ef4444;
+    --success: #10b981;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-body { background: var(--bg-page); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+body { 
+    font-family: -apple-system, system-ui, sans-serif;
+    background: #000;
+    color: var(--text);
+    /* Фикс высоты для Infinix и других Android */
+    height: 100vh;
+    height: 100dvh; 
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
 
-/* АДАПТИВНЫЙ КОНТЕЙНЕР */
 .app-container {
     width: 100%;
-    height: 100vh;
+    height: 100%;
+    background: var(--bg-dark);
     display: flex;
     flex-direction: column;
-    background: var(--bg-chat);
     position: relative;
 }
 
-/* Если экран шире 768px (ПК), делаем как Telegram Web */
-@media (min-width: 768px) {
-    .app-container {
-        max-width: 800px;
-        height: 90vh;
-        border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        border: 1px solid #334155;
-        overflow: hidden;
-    }
+/* На больших экранах центрируем как Telegram Web */
+@media (min-width: 900px) {
+    .app-container { max-width: 800px; height: 95dvh; border-radius: 12px; margin: auto; }
 }
 
-/* ШАПКА */
-header { background: var(--header-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; z-index: 10; }
-.logo-title { font-size: 18px; font-weight: bold; }
-#my-profile-name { color: var(--accent); cursor: pointer; font-weight: 600; padding: 5px 10px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; }
+header {
+    background: var(--bg-sec);
+    padding: 0 20px;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #101921;
+    z-index: 100;
+}
 
-/* ЧАТ */
+.logo-title { font-weight: bold; font-size: 20px; color: var(--accent); }
+.profile-badge { cursor: pointer; background: rgba(36, 129, 204, 0.15); padding: 6px 12px; border-radius: 8px; font-weight: 500; }
+
 #messages-container {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-    background-blend-mode: overlay;
-    background-color: var(--bg-chat);
+    background-size: cover;
+    background-attachment: fixed;
 }
 
-.msg { background: var(--msg-bg); padding: 10px 14px; border-radius: 12px; max-width: 85%; width: fit-content; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-.msg-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; color: var(--accent); font-weight: bold; }
+.msg { background: var(--bg-sec); padding: 8px 12px; border-radius: 12px; max-width: 85%; width: fit-content; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.msg-header { color: #5288c1; font-weight: bold; font-size: 14px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
 
-/* НОРМАЛЬНАЯ ГАЛОЧКА */
+/* Галочка */
 .verified-badge {
-    display: inline-flex; justify-content: center; align-items: center;
-    width: 16px; height: 16px;
-    background: #38bdf8; color: #fff;
-    border-radius: 50%; font-size: 10px;
+    width: 14px; height: 14px; background: #38bdf8; color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px;
 }
-.verified-badge::after { content: '✓'; }
+.verified-badge::after { content: '✓'; font-weight: bold; }
 
-/* ПОЛЕ ВВОДА */
-.input-area { display: flex; padding: 15px; background: var(--header-bg); border-top: 1px solid #000; gap: 10px; }
-.input-area input { flex-grow: 1; padding: 12px 15px; border-radius: 20px; border: none; background: #1e293b; color: white; outline: none; font-size: 15px; }
-.send-btn { background: var(--accent); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 18px; }
+.input-area {
+    background: var(--bg-sec);
+    padding: 10px 15px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Учет отступа Infinix */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-/* МОДАЛЬНОЕ ОКНО ПРОФИЛЯ (Вместо кривого выпадающего меню) */
-.modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
-.modal-content { background: var(--bg-chat); padding: 25px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; border: 1px solid #334155; }
-.modal-content input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: var(--bg-page); color: white; }
-.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
+input[type="text"], input[type="email"], input[type="password"] {
+    background: #101921; border: 1px solid #242f3d; color: #fff;
+    padding: 12px; border-radius: 10px; outline: none; width: 100%;
+}
+
+.send-btn { background: none; border: none; color: var(--accent); font-size: 28px; cursor: pointer; }
+
+/* МОДАЛКА (ФИКС) */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+    background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
+    z-index: 9999; backdrop-filter: blur(5px);
+}
+.modal-content {
+    background: var(--bg-sec); width: 90%; max-width: 380px;
+    padding: 25px; border-radius: 20px; text-align: center;
+}
+
+.btn { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; color: #fff; margin-bottom: 10px; }
 .btn-primary { background: var(--accent); }
-.btn-admin { background: #10b981; }
-.btn-danger { background: #ef4444; }
-.invite-result { margin: 10px 0; padding: 10px; background: #022c22; color: #34d399; border-radius: 8px; font-family: monospace; display: none; font-size: 18px;}
+.btn-danger { background: var(--danger); }
+.btn-admin { background: var(--success); }
+
+.invite-display { background: #052e16; color: #4ade80; padding: 12px; border-radius: 8px; margin-top: 10px; font-family: monospace; font-size: 18px; display: none; }
+.switch-link { color: var(--accent); cursor: pointer; margin-top: 15px; font-size: 14px; }
