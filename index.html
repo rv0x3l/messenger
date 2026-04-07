@@ -55,7 +55,13 @@
                 <button class="btn btn-danger" style="margin-top: 20px;" onclick="logout()">Выйти из аккаунта</button>
             </div>
         </div>
-    </div>
+        <script>
+        window.onerror = function(msg, url, line) {
+            alert("ОШИБКА В JS: " + msg + "\nСтрока: " + line);
+            return false;
+        };
+    </script>
+    
     <script src="app.js"></script>
 </body>
 </html>
