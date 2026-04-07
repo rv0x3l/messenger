@@ -117,17 +117,21 @@ async function sendMessage() {
     if (error) console.error(error);
 }
 
-// Отрисовка сообщений
 function renderMessage(msg) {
     const container = document.getElementById('messages-container');
     const div = document.createElement('div');
     div.className = 'msg';
 
     const profile = msg.profiles || { username: 'user', is_verified: false };
-    const badge = profile.is_verified ? '<span class="msg-badge">☑</span>' : '';
+    
+    // Рисуем "телеграмную" галочку только если юзер верифицирован
+    const badge = profile.is_verified ? '<span class="msg-badge" title="Подтвержденный аккаунт"></span>' : '';
     
     div.innerHTML = `
-        <div class="msg-header">@${profile.username} ${badge}</div>
+        <div class="msg-header">
+            <span class="msg-author">@${profile.username}</span>
+            ${badge}
+        </div>
         <div class="msg-content">${escapeHTML(msg.content)}</div>
     `;
 
