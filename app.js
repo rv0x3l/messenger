@@ -1,15 +1,11 @@
-// Меняем const на var, чтобы браузер не ругался на переопределение
-var SUPABASE_URL = 'https://edgkjpixloxbvjronmhl.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX';
+const SUPABASE_URL = 'https://edgkjpixloxbvjronmhl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX';
 
-var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 
-// ... и дальше пошла функция async function init() ...
-
-// Инициализация приложения
+// === ИНИЦИАЛИЗАЦИЯ ===
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -24,7 +20,7 @@ async function init() {
     }
 }
 
-// ИСПРАВЛЕНО: Переключение между Входом и Регистрацией
+// === АВТОРИЗАЦИЯ ===
 function toggleAuthMode() {
     const loginBox = document.getElementById('login-box');
     const regBox = document.getElementById('register-box');
@@ -38,7 +34,6 @@ function toggleAuthMode() {
     }
 }
 
-// ИСПРАВЛЕНО: Вход (Login)
 async function login() {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
@@ -49,11 +44,10 @@ async function login() {
     if (error) {
         alert('Ошибка: ' + error.message);
     } else {
-        location.reload(); // Перезагрузка для входа в чат
+        location.reload();
     }
 }
 
-// ИСПРАВЛЕНО: Регистрация по инвайту
 async function register() {
     const code = document.getElementById('reg-invite').value;
     const email = document.getElementById('reg-email').value;
@@ -61,7 +55,7 @@ async function register() {
 
     if(!code || !email || !password) return alert('Заполните все поля!');
 
-    // 1. Проверяем инвайт в таблице
+    // Проверяем инвайт
     const { data: invite, error: inviteErr } = await supabase
         .from('invites')
         .select('*')
@@ -73,11 +67,11 @@ async function register() {
         return alert('Инвайт неверный или уже использован!');
     }
 
-    // 2. Регистрация в Auth
+    // Регистрация
     const { error: authErr } = await supabase.auth.signUp({ email, password });
     if (authErr) return alert('Ошибка: ' + authErr.message);
 
-    // 3. Помечаем инвайт как использованный
+    // Гасим инвайт
     await supabase.from('invites')
         .update({ is_used: true, used_by_email: email })
         .eq('code', code);
@@ -86,7 +80,12 @@ async function register() {
     toggleAuthMode();
 }
 
-// Загрузка своего профиля (ник и галочка)
+async function logout() {
+    await supabase.auth.signOut();
+    location.reload();
+}
+
+// === ПРОФИЛЬ И МОДАЛЬНОЕ ОКНО ===
 async function loadProfile() {
     const { data: profile, error } = await supabase
         .from('profiles')
@@ -97,14 +96,66 @@ async function loadProfile() {
     if (error) return console.error('Ошибка профиля:', error);
 
     const nameBtn = document.getElementById('my-profile-name');
-    nameBtn.innerText = profile.username + (profile.is_verified ? ' ☑' : ' ▼');
+    nameBtn.innerText = profile.username; // Кнопка открытия профиля
+    document.getElementById('edit-username').value = profile.username;
 
+    // Если есть галочка — показываем админ-панель в модалке
     if (profile.is_verified) {
         document.getElementById('admin-panel').style.display = 'block';
     }
 }
 
-// Отправка сообщения
+function toggleProfileModal() {
+    document.getElementById('profile-modal').style.display = 'flex';
+}
+
+function closeModal(event) {
+    // Закрываем модалку только если кликнули по темному фону
+    if (event.target.id === 'profile-modal') {
+        document.getElementById('profile-modal').style.display = 'none';
+        document.getElementById('invite-result').style.display = 'none';
+    }
+}
+
+async function updateUsername() {
+    const newName = document.getElementById('edit-username').value.trim();
+    if(!newName) return;
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ username: newName })
+        .eq('id', currentUser.id);
+
+    if (error) {
+        alert('Ошибка: ' + error.message);
+    } else {
+        alert('Ник обновлен!');
+        loadProfile();
+        document.getElementById('profile-modal').style.display = 'none';
+    }
+}
+
+async function generateInvite() {
+    const inviteBox = document.getElementById('invite-result');
+    inviteBox.innerText = 'Генерация...';
+    inviteBox.style.display = 'block';
+
+    const { data, error } = await supabase.rpc('create_new_invite');
+    
+    if (error) {
+        console.error("Ошибка SQL:", error);
+        inviteBox.innerText = 'Ошибка базы!';
+        inviteBox.style.background = '#7f1d1d';
+        inviteBox.style.color = '#fca5a5';
+        alert('Не удалось создать код. Проверь, добавил ли ты SQL функцию create_new_invite в Supabase.');
+    } else {
+        inviteBox.style.background = '#022c22';
+        inviteBox.style.color = '#34d399';
+        inviteBox.innerText = data; // Показываем код прямо в окне
+    }
+}
+
+// === ЧАТ И СООБЩЕНИЯ ===
 async function sendMessage() {
     const input = document.getElementById('message-input');
     const content = input.value.trim();
@@ -124,14 +175,11 @@ function renderMessage(msg) {
 
     const profile = msg.profiles || { username: 'user', is_verified: false };
     
-    // Рисуем "телеграмную" галочку только если юзер верифицирован
-    const badge = profile.is_verified ? '<span class="msg-badge" title="Подтвержденный аккаунт"></span>' : '';
+    // Новая телеграм-галочка
+    const badge = profile.is_verified ? '<span class="verified-badge" title="Подтвержден"></span>' : '';
     
     div.innerHTML = `
-        <div class="msg-header">
-            <span class="msg-author">@${profile.username}</span>
-            ${badge}
-        </div>
+        <div class="msg-header">@${escapeHTML(profile.username)} ${badge}</div>
         <div class="msg-content">${escapeHTML(msg.content)}</div>
     `;
 
@@ -139,12 +187,12 @@ function renderMessage(msg) {
     container.scrollTop = container.scrollHeight;
 }
 
-// Загрузка истории чата
 async function loadMessages() {
     const { data, error } = await supabase
         .from('messages')
         .select('*, profiles(username, is_verified)')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .limit(100); // Грузим последние 100 сообщений
 
     if (error) return console.error(error);
     
@@ -153,7 +201,6 @@ async function loadMessages() {
     data.forEach(renderMessage);
 }
 
-// Realtime: слушаем новые сообщения
 function subscribeToMessages() {
     supabase.channel('public:messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
@@ -169,21 +216,11 @@ function subscribeToMessages() {
         .subscribe();
 }
 
-// Вспомогательные функции
+// === УТИЛИТЫ ===
 function showScreen(id) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('chat-screen').style.display = 'none';
     document.getElementById(id).style.display = 'flex';
-}
-
-function toggleProfileMenu() {
-    const m = document.getElementById('profile-menu');
-    m.style.display = m.style.display === 'none' ? 'block' : 'none';
-}
-
-async function logout() {
-    await supabase.auth.signOut();
-    location.reload();
 }
 
 function escapeHTML(str) {
@@ -192,4 +229,5 @@ function escapeHTML(str) {
     return p.innerHTML;
 }
 
+// Запускаем приложение
 init();
