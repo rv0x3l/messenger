@@ -5,6 +5,8 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 
+// ... и дальше пошла функция async function init() ...
+
 // Инициализация приложения
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
