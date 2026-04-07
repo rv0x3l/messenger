@@ -1,7 +1,9 @@
-const SUPABASE_URL = 'https://edgkjpixloxbvjronmhl.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX';
+// Меняем const на var, чтобы браузер не ругался на переопределение
+var SUPABASE_URL = 'https://edgkjpixloxbvjronmhl.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 let currentUser = null;
 
