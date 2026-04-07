@@ -1,131 +1,80 @@
 :root {
-    --bg-main: #0e1621;
-    --bg-sec: #17212b;
-    --accent: #2481cc;
-    --text: #f5f5f5;
-    --tg-blue: #2481cc;
+    --bg-page: #0f172a; /* Цвет фона вокруг чата на ПК */
+    --bg-chat: #1e293b; /* Цвет самого чата */
+    --header-bg: #0f172a;
+    --msg-bg: #334155;
+    --accent: #3b82f6;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-body { 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text);
+body { background: var(--bg-page); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+
+/* АДАПТИВНЫЙ КОНТЕЙНЕР */
+.app-container {
+    width: 100%;
     height: 100vh;
     display: flex;
+    flex-direction: column;
+    background: var(--bg-chat);
+    position: relative;
 }
 
-/* Чат на весь экран */
-.container { 
-    width: 100vw; 
-    height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    background: var(--bg-main); 
+/* Если экран шире 768px (ПК), делаем как Telegram Web */
+@media (min-width: 768px) {
+    .app-container {
+        max-width: 800px;
+        height: 90vh;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        border: 1px solid #334155;
+        overflow: hidden;
+    }
 }
 
-header {
-    background: var(--bg-sec);
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #101921;
-    height: 60px;
-}
+/* ШАПКА */
+header { background: var(--header-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; z-index: 10; }
+.logo-title { font-size: 18px; font-weight: bold; }
+#my-profile-name { color: var(--accent); cursor: pointer; font-weight: 600; padding: 5px 10px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; }
 
-#my-profile-name { color: var(--accent); cursor: pointer; font-weight: 500; }
-
-/* Список сообщений */
+/* ЧАТ */
 #messages-container {
     flex-grow: 1;
     overflow-y: auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Фон как в ТГ */
-    background-attachment: fixed;
+    gap: 12px;
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    background-blend-mode: overlay;
+    background-color: var(--bg-chat);
 }
 
-.msg {
-    background: var(--bg-sec);
-    padding: 8px 12px;
-    border-radius: 12px;
-    max-width: 70%;
-    width: fit-content;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+.msg { background: var(--msg-bg); padding: 10px 14px; border-radius: 12px; max-width: 85%; width: fit-content; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.msg-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; color: var(--accent); font-weight: bold; }
+
+/* НОРМАЛЬНАЯ ГАЛОЧКА */
+.verified-badge {
+    display: inline-flex; justify-content: center; align-items: center;
+    width: 16px; height: 16px;
+    background: #38bdf8; color: #fff;
+    border-radius: 50%; font-size: 10px;
 }
+.verified-badge::after { content: '✓'; }
 
-.msg-header { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
-.msg-author { font-weight: bold; color: #5288c1; font-size: 14px; }
+/* ПОЛЕ ВВОДА */
+.input-area { display: flex; padding: 15px; background: var(--header-bg); border-top: 1px solid #000; gap: 10px; }
+.input-area input { flex-grow: 1; padding: 12px 15px; border-radius: 20px; border: none; background: #1e293b; color: white; outline: none; font-size: 15px; }
+.send-btn { background: var(--accent); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 18px; }
 
-/* Галочка в стиле Telegram */
-.msg-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    background: var(--tg-blue);
-    color: white;
-    font-size: 10px;
-    border-radius: 50%;
-    position: relative;
-}
-.msg-badge::after { content: '✓'; font-weight: bold; }
-
-.msg-content { font-size: 15px; line-height: 1.4; color: #fff; }
-
-/* Поле ввода */
-.input-area {
-    background: var(--bg-sec);
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-input {
-    flex-grow: 1;
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 16px;
-    outline: none;
-    padding: 10px;
-}
-
-.send-btn {
-    background: none;
-    border: none;
-    color: var(--accent);
-    font-size: 24px;
-    cursor: pointer;
-}
-
-/* Выпадающее меню профиля */
-.dropdown-menu {
-    position: absolute;
-    top: 65px;
-    right: 20px;
-    background: var(--bg-sec);
-    border: 1px solid #101921;
-    border-radius: 10px;
-    padding: 15px;
-    width: 250px;
-    z-index: 1000;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-}
-
-.small-btn {
-    width: 100%;
-    padding: 10px;
-    background: var(--accent);
-    border: none;
-    color: white;
-    border-radius: 5px;
-    margin-top: 10px;
-    cursor: pointer;
-}
+/* МОДАЛЬНОЕ ОКНО ПРОФИЛЯ (Вместо кривого выпадающего меню) */
+.modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
+.modal-content { background: var(--bg-chat); padding: 25px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; border: 1px solid #334155; }
+.modal-content input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: var(--bg-page); color: white; }
+.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; }
+.btn-primary { background: var(--accent); }
+.btn-admin { background: #10b981; }
+.btn-danger { background: #ef4444; }
+.invite-result { margin: 10px 0; padding: 10px; background: #022c22; color: #34d399; border-radius: 8px; font-family: monospace; display: none; font-size: 18px;}
