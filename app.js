@@ -1,8 +1,10 @@
+// Меняем const на var. Теперь браузер не будет крашиться при дублировании!
 var SUPABASE_URL = 'https://edgkjpixloxbvjronmhl.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX'
+var SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX';
+
 var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null;
+// ... дальше оставляем всё как было (let currentUser = null; и так далее)let currentUser = null;
 
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
