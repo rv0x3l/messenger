@@ -1,14 +1,11 @@
-// Твои актуальные ключи
 const SUPABASE_URL = 'https://edgkjpixloxbvjronmhl.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_2mDzLUq_H6743UOGR4BV6w_7cMWnzmX';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-
 let currentUser = null;
-let currentProfile = null;
 
-// Инициализация
+// Инициализация приложения
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -21,48 +18,46 @@ async function init() {
     } else {
         showScreen('auth-screen');
     }
-
-    // Слушатель изменения состояния авторизации
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN') {
-            currentUser = session.user;
-            await loadProfile();
-            showScreen('chat-screen');
-            loadMessages();
-        } else if (event === 'SIGNED_OUT') {
-            currentUser = null;
-            showScreen('auth-screen');
-        }
-    });
 }
 
-// === АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ===
-
+// ИСПРАВЛЕНО: Переключение между Входом и Регистрацией
 function toggleAuthMode() {
     const loginBox = document.getElementById('login-box');
     const regBox = document.getElementById('register-box');
-    loginBox.style.display = loginBox.style.display === 'none' ? 'block' : 'none';
-    regBox.style.display = regBox.style.display === 'none' ? 'block' : 'none';
+    
+    if (loginBox.style.display !== 'none') {
+        loginBox.style.display = 'none';
+        regBox.style.display = 'block';
+    } else {
+        loginBox.style.display = 'block';
+        regBox.style.display = 'none';
+    }
 }
 
+// ИСПРАВЛЕНО: Вход (Login)
 async function login() {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     
-    if(!email || !password) return alert('Введите данные');
+    if(!email || !password) return alert('Введите почту и пароль');
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) alert('Ошибка входа: ' + error.message);
+    if (error) {
+        alert('Ошибка: ' + error.message);
+    } else {
+        location.reload(); // Перезагрузка для входа в чат
+    }
 }
 
+// ИСПРАВЛЕНО: Регистрация по инвайту
 async function register() {
     const code = document.getElementById('reg-invite').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
 
-    if(!code || !email || !password) return alert('Заполните все поля');
+    if(!code || !email || !password) return alert('Заполните все поля!');
 
-    // 1. Проверка инвайта
+    // 1. Проверяем инвайт в таблице
     const { data: invite, error: inviteErr } = await supabase
         .from('invites')
         .select('*')
@@ -70,81 +65,78 @@ async function register() {
         .eq('is_used', false)
         .single();
 
-    if (inviteErr || !invite) return alert('Инвайт недействителен!');
+    if (inviteErr || !invite) {
+        return alert('Инвайт неверный или уже использован!');
+    }
 
-    // 2. Регистрация
+    // 2. Регистрация в Auth
     const { error: authErr } = await supabase.auth.signUp({ email, password });
-    if (authErr) return alert(authErr.message);
+    if (authErr) return alert('Ошибка: ' + authErr.message);
 
-    // 3. Гасим инвайт
+    // 3. Помечаем инвайт как использованный
     await supabase.from('invites')
         .update({ is_used: true, used_by_email: email })
         .eq('code', code);
 
-    alert('Успех! Теперь войдите в систему.');
+    alert('Регистрация успешна! Теперь войдите.');
     toggleAuthMode();
 }
 
-async function logout() {
-    await supabase.auth.signOut();
-    document.getElementById('profile-menu').style.display = 'none';
-}
-
-// === ПРОФИЛЬ ===
-
+// Загрузка своего профиля (ник и галочка)
 async function loadProfile() {
-    const { data } = await supabase
+    const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .single();
     
-    currentProfile = data;
-    
-    const nameEl = document.getElementById('my-profile-name');
-    nameEl.innerHTML = `${data.username} ${data.is_verified ? '☑' : '▼'}`;
-    document.getElementById('edit-username').value = data.username;
+    if (error) return console.error('Ошибка профиля:', error);
 
-    if (data.is_verified) {
+    const nameBtn = document.getElementById('my-profile-name');
+    nameBtn.innerText = profile.username + (profile.is_verified ? ' ☑' : ' ▼');
+
+    if (profile.is_verified) {
         document.getElementById('admin-panel').style.display = 'block';
     }
 }
 
-function toggleProfileMenu() {
-    const menu = document.getElementById('profile-menu');
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+// Отправка сообщения
+async function sendMessage() {
+    const input = document.getElementById('message-input');
+    const content = input.value.trim();
+    if (!content) return;
+
+    input.value = '';
+    const { error } = await supabase.from('messages').insert([
+        { user_id: currentUser.id, content: content }
+    ]);
+    if (error) console.error(error);
 }
 
-async function updateUsername() {
-    const newName = document.getElementById('edit-username').value;
-    if(!newName) return;
+// Отрисовка сообщений
+function renderMessage(msg) {
+    const container = document.getElementById('messages-container');
+    const div = document.createElement('div');
+    div.className = 'msg';
 
-    const { error } = await supabase
-        .from('profiles')
-        .update({ username: newName })
-        .eq('id', currentUser.id);
+    const profile = msg.profiles || { username: 'user', is_verified: false };
+    const badge = profile.is_verified ? '<span class="msg-badge">☑</span>' : '';
+    
+    div.innerHTML = `
+        <div class="msg-header">@${profile.username} ${badge}</div>
+        <div class="msg-content">${escapeHTML(msg.content)}</div>
+    `;
 
-    if (error) alert('Ошибка: ' + error.message);
-    else {
-        alert('Ник обновлен!');
-        loadProfile();
-    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
-async function generateInvite() {
-    const { data, error } = await supabase.rpc('create_new_invite');
-    if (error) alert('Ошибка: ' + error.message);
-    else prompt('Ваш новый инвайт-код (скопируйте):', data);
-}
-
-// === ЧАТ ===
-
+// Загрузка истории чата
 async function loadMessages() {
     const { data, error } = await supabase
         .from('messages')
-        .select('*, profiles(username, is_verified, verification_comment)')
-        .order('created_at', { ascending: true })
-        .limit(50);
+        .select('*, profiles(username, is_verified)')
+        .order('created_at', { ascending: true });
 
     if (error) return console.error(error);
     
@@ -153,84 +145,43 @@ async function loadMessages() {
     data.forEach(renderMessage);
 }
 
-function renderMessage(msg) {
-    const container = document.getElementById('messages-container');
-    const div = document.createElement('div');
-    div.className = 'msg';
-
-    const profile = msg.profiles;
-    const badge = profile.is_verified 
-        ? `<span class="msg-badge" title="${profile.verification_comment}">☑</span>` 
-        : '';
-    
-    const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-    div.innerHTML = `
-        <div class="msg-header">
-            <span class="msg-author">${escapeHTML(profile.username)}</span>
-            ${badge}
-            <span class="msg-time">${time}</span>
-        </div>
-        <div class="msg-content">${escapeHTML(msg.content)}</div>
-    `;
-
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-}
-
-async function sendMessage() {
-    const input = document.getElementById('message-input');
-    const text = input.value.trim();
-    if (!text) return;
-
-    input.value = ''; // Сразу очищаем для удобства
-
-    await supabase.from('messages').insert([
-        { user_id: currentUser.id, content: text }
-    ]);
-}
-
-function handleEnter(e) {
-    if (e.key === 'Enter') sendMessage();
-}
-
-// Подписка на новые сообщения в реальном времени
+// Realtime: слушаем новые сообщения
 function subscribeToMessages() {
     supabase.channel('public:messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-            // Supabase Realtime не подтягивает JOIN (данные профиля), запрашиваем вручную
-            const { data: profileData } = await supabase
+            const { data: prof } = await supabase
                 .from('profiles')
-                .select('username, is_verified, verification_comment')
+                .select('username, is_verified')
                 .eq('id', payload.new.user_id)
                 .single();
             
-            payload.new.profiles = profileData;
+            payload.new.profiles = prof;
             renderMessage(payload.new);
         })
         .subscribe();
 }
 
-// Защита от XSS
-function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
-        tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag] || tag)
-    );
-}
-
-// Утилита
+// Вспомогательные функции
 function showScreen(id) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('chat-screen').style.display = 'none';
     document.getElementById(id).style.display = 'flex';
 }
 
-// Запуск
+function toggleProfileMenu() {
+    const m = document.getElementById('profile-menu');
+    m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+
+async function logout() {
+    await supabase.auth.signOut();
+    location.reload();
+}
+
+function escapeHTML(str) {
+    const p = document.createElement('p');
+    p.textContent = str;
+    return p.innerHTML;
+}
+
 init();
-      
