@@ -2,60 +2,59 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>rv0x3l Messenger</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="app-container" id="app">
-        
-        <div id="auth-screen" style="display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 20px;">
-            <h1 style="text-align: center; margin-bottom: 20px; color: #3b82f6;">rv0x3l</h1>
-            <div id="login-box">
-                <input type="email" id="login-email" placeholder="Email" class="modal-content input" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; background: #0f172a; color: white;">
-                <input type="password" id="login-password" placeholder="Пароль" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: #0f172a; color: white;">
+        <div id="auth-screen" style="display: none; flex-direction: column; justify-content: center; height: 100%; padding: 20px;">
+            <h1 style="text-align: center; margin-bottom: 30px; color: #3b82f6; font-size: 32px;">rv0x3l</h1>
+            <div id="login-box" class="auth-card">
+                <input type="email" id="login-email" placeholder="Email">
+                <input type="password" id="login-password" placeholder="Пароль">
                 <button class="btn btn-primary" onclick="login()">Войти</button>
-                <p style="text-align: center; color: #94a3b8; margin-top: 15px;" onclick="toggleAuthMode()">Регистрация по инвайту</p>
+                <p class="switch-link" onclick="toggleAuthMode()">Регистрация по инвайту</p>
             </div>
-            <div id="register-box" style="display: none;">
-                <input type="text" id="reg-invite" placeholder="Инвайт-код" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; background: #0f172a; color: white;">
-                <input type="email" id="reg-email" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; background: #0f172a; color: white;">
-                <input type="password" id="reg-password" placeholder="Пароль" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: #0f172a; color: white;">
+            <div id="register-box" class="auth-card" style="display: none;">
+                <input type="text" id="reg-invite" placeholder="Инвайт-код">
+                <input type="email" id="reg-email" placeholder="Email">
+                <input type="password" id="reg-password" placeholder="Пароль">
                 <button class="btn btn-primary" onclick="register()">Создать аккаунт</button>
-                <p style="text-align: center; color: #94a3b8; margin-top: 15px;" onclick="toggleAuthMode()">Уже есть аккаунт? Войти</p>
+                <p class="switch-link" onclick="toggleAuthMode()">Уже есть аккаунт? Войти</p>
             </div>
         </div>
 
         <div id="chat-screen" style="display: none; height: 100%; flex-direction: column;">
             <header>
                 <div class="logo-title">rv0x3l</div>
-                <div id="my-profile-name" onclick="toggleProfileModal()">Профиль</div>
+                <div id="my-profile-name" class="profile-badge" onclick="toggleProfileModal()">Загрузка...</div>
             </header>
 
             <div id="messages-container"></div>
 
             <div class="input-area">
-                <input type="text" id="message-input" placeholder="Написать..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
                 <button class="send-btn" onclick="sendMessage()">➤</button>
-            </div>
-
-            <div id="profile-modal" class="modal-overlay" onclick="closeModal(event)">
-                <div class="modal-content">
-                    <h3 style="margin-bottom: 15px;">Настройки</h3>
-                    <input type="text" id="edit-username" placeholder="Новый ник">
-                    <button class="btn btn-primary" onclick="updateUsername()">Сохранить ник</button>
-                    
-                    <div id="admin-panel" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155;">
-                        <button class="btn btn-admin" onclick="generateInvite()">Создать инвайт</button>
-                        <div id="invite-result" class="invite-result"></div>
-                    </div>
-                    
-                    <button class="btn btn-danger" style="margin-top: 15px;" onclick="logout()">Выйти</button>
-                </div>
             </div>
         </div>
 
+        <div id="profile-modal" class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal-content">
+                <h3>Настройки профиля</h3>
+                <label>Никнейм:</label>
+                <input type="text" id="edit-username" placeholder="Твой ник">
+                <button class="btn btn-primary" onclick="updateUsername()">Сохранить</button>
+                
+                <div id="admin-panel" style="display: none; margin-top: 20px; border-top: 1px solid #334155; pt: 15px;">
+                    <button class="btn btn-admin" onclick="generateInvite()">Создать инвайт</button>
+                    <div id="invite-result" class="invite-display"></div>
+                </div>
+                
+                <button class="btn btn-danger" style="margin-top: 20px;" onclick="logout()">Выйти из аккаунта</button>
+            </div>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>
